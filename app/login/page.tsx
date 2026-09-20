@@ -1,3 +1,16 @@
 "use client";
-import {useState} from "react";import {createClient} from "../../lib/supabase";import {useRouter} from "next/navigation";import Link from "next/link";
-export default function Login(){const[email,setEmail]=useState(""),[password,setPassword]=useState(""),[error,setError]=useState(""),[loading,setLoading]=useState(false);const router=useRouter();async function submit(e:React.FormEvent){e.preventDefault();setLoading(true);setError("");const{error}=await createClient().auth.signInWithPassword({email,password});if(error)setError(error.message);else router.push("/super-admin");setLoading(false)}return <main className="container" style={{maxWidth:520}}><h1>Connexion</h1><form className="card" onSubmit={submit}><label>Email</label><input className="input" type="email" value={email} onChange={e=>setEmail(e.target.value)} required/><label>Mot de passe</label><input className="input" type="password" value={password} onChange={e=>setPassword(e.target.value)} required/>{error&&<p className="danger">{error}</p>}<button className="btn">{loading?"Connexion...":"Se connecter"}</button><p><Link href="/forgot-password" className="muted">Mot de passe oublié ?</Link></p></form></main>}
+import {useState} from "react";
+import {createClient} from "../../lib/supabase";
+import {useRouter} from "next/navigation";
+import Link from "next/link";
+
+export default function Login(){
+ const [email,setEmail]=useState("");const [password,setPassword]=useState("");const [error,setError]=useState("");const [loading,setLoading]=useState(false);const router=useRouter();
+ async function submit(e:React.FormEvent){e.preventDefault();setLoading(true);setError("");const s=createClient();const {data,error}=await s.auth.signInWithPassword({email:email.trim().toLowerCase(),password});if(error){setError(error.message);setLoading(false);return;}
+ const {data:p}=await s.from("profiles").select("role").eq("id",data.user.id).single();
+ if(p?.role==="super_admin"){router.push("/super-admin");return;}
+ const {data:m}=await s.from("store_users").select("store_id,stores(slug)").eq("user_id",data.user.id).eq("role","owner").limit(1).maybeSingle();
+ if(m?.stores){const st=Array.isArray(m.stores)?m.stores[0]:m.stores;router.push("/store/"+st.slug+"/admin");return;}
+ router.push("/account");setLoading(false);}
+ return <main className="container" style={{maxWidth:520}}><div className="card"><h1>Connexion</h1><form onSubmit={submit}><label>Email</label><input className="input" type="email" value={email} onChange={e=>setEmail(e.target.value)} required/><label>Mot de passe</label><input className="input" type="password" value={password} onChange={e=>setPassword(e.target.value)} required/>{error&&<p className="danger">{error}</p>}<button className="btn" disabled={loading}>{loading?"Connexion...":"Se connecter"}</button></form><p><Link href="/forgot-password" className="muted">Mot de passe oublié ?</Link></p><p>Pas encore de compte ? <Link href="/signup" className="muted">Créer une boutique</Link></p></div></main>
+}
