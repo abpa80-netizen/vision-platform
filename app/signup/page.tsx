@@ -1,5 +1,5 @@
 "use client";
-import {useState} from "react";
+import {useEffect,useState} from "react";
 import {createClient} from "../../lib/supabase";
 import {useRouter} from "next/navigation";
 import Link from "next/link";
@@ -18,6 +18,7 @@ export default function Signup(){
   const [message,setMessage]=useState("");
   const [loading,setLoading]=useState(false);
   const router=useRouter();
+  useEffect(()=>{const ref=new URLSearchParams(window.location.search).get("ref");if(ref){createClient().rpc("track_referral_click",{p_code:ref});}},[]);
 
   async function submit(e:React.FormEvent){
     e.preventDefault(); setError(""); setMessage("");
