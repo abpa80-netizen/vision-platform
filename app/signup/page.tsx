@@ -33,6 +33,8 @@ export default function Signup(){
     });
     if(error){setError(error.message);setLoading(false);return;}
     if(data.session){
+      const ref=new URLSearchParams(window.location.search).get("ref");
+      if(ref){await supabase.rpc("register_referral",{p_code:ref,p_email:email.trim().toLowerCase()});}
       router.push("/account");
       return;
     }
